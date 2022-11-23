@@ -1,0 +1,45 @@
+version: '2'
+services:
+  beacon:
+    image: ethdreamer/lighthouse:withdrawals
+    expose:
+      - 5052
+    volumes:
+      - ./shared:/shared
+    entrypoint:
+      "/shared/scripts/beacon.sh"
+  execution:
+    image: bbusa/geth-withdrawals
+    expose:
+      - 8545
+      - 8551
+    volumes:
+      - ./shared:/shared
+    entrypoint:
+      "/shared/scripts/execution.sh"
+  validator:
+    image: ethdreamer/lighthouse:withdrawals
+    expose:
+      - 5052
+    volumes:
+      - ./shared:/shared
+    entrypoint:
+      "/shared/scripts/validator.sh"
+    depends_on:
+      - beacon
+      - execution
+  proxy:
+    image: ethdreamer/json_rpc_snoop:latest
+    entrypoint: >
+      /bin/bash -c "
+        ./json_rpc_snoop -p 8551 -b 0.0.0.0 http://execution:8551
+      "
+    expose:
+      - 8551
+  genstate:
+    image: ethdreamer/prysmctl:capella
+    volumes:
+      - ./shared:/shared
+    entrypoint:
+      "/shared/scripts/genstate.sh"
+
