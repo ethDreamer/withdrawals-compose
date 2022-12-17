@@ -1,24 +1,26 @@
 #!/bin/bash
 
-TESTNET_CONFIG=/shared/testnet
+get_config_param () {
+    local config=$1
+    local param=$2
 
-GENESIS_FILE=$TESTNET_CONFIG/eth2_genesis_time.dat
-CONFIG_FILE=$TESTNET_CONFIG/config.yml
-DATADIR=/datadir
+    grep "${param}:" $config | cut -d' ' -f2
+}
 
-while [ ! -e $GENESIS_FILE ]; do
+TESTNET_DIRECTORY=/shared/testnet
+FINISHED_FILE=$TESTNET_DIRECTORY/finished.dat
+
+# block until genstate.sh is finished setting up testnet directory
+while [ ! -e $FINISHED_FILE ]; do
     sleep 1
 done
+rm $FINISHED_FILE
 
-ETH2_GENESIS=$(cat $GENESIS_FILE)
-LCLI_BIN=/home/mark/ethereum/development/lighthouse/target/release/lcli
-
-ALTAIR_FORK_EPOCH=$(cat $CONFIG_FILE | grep ALTAIR_FORK_EPOCH    | cut -d' ' -f2)
-MERGE_FORK_EPOCH=$(cat  $CONFIG_FILE | grep BELLATRIX_FORK_EPOCH | cut -d' ' -f2)
-DEPOSIT_ADDRESS=$(cat   $CONFIG_FILE | grep DEPOSIT_CONTRACT_ADDRESS | cut -d ' ' -f2)
-
-rm -rf $DATADIR
-
+CONFIG_YAML=$TESTNET_DIRECTORY/config.yml
+MIN_GENESIS_TIME=$(get_config_param $CONFIG_YAML MIN_GENESIS_TIME)
+ALTAIR_FORK_EPOCH=$(get_config_param $CONFIG_YAML ALTAIR_FORK_EPOCH)
+MERGE_FORK_EPOCH=$(get_config_param $CONFIG_YAML BELLATRIX_FORK_EPOCH)
+DEPOSIT_ADDRESS=$(get_config_param $CONFIG_YAML DEPOSIT_CONTRACT_ADDRESS)
 GENESIS_BLOCK_HASH=$(curl -s \
 	-X \
 	POST \
@@ -31,6 +33,8 @@ GENESIS_BLOCK_HASH=$(curl -s \
 
 echo "GENESIS_BLOCK_HASH: $GENESIS_BLOCK_HASH"
 
+DATADIR=/datadir
+rm -rf $DATADIR
 
 echo lcli \
     --spec mainnet \

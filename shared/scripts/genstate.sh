@@ -1,28 +1,50 @@
 #!/bin/bash
 
-GENESIS=$(($(date +%s) + 12))
-SHANGHAI=$(($GENESIS + 1440))
-ETH2_GENESIS=$(($GENESIS + 12))
+setup_testnet_directory () {
+    local td=$1
+    rm -rf $td
+    mkdir -p $td
+    cp -ra /shared/template/* $td
+}
+
+get_config_param () {
+    local config=$1
+    local param=$2
+
+    grep "${param}:" $config | cut -d' ' -f2
+}
+
+set_config_param () {
+    local config=$1
+    local param=$2
+    local value=$3
+    sed -i -e "s/${param}.*/${param}: $value/" $config
+}
 
 
-TESTNET_CONFIG=/shared/testnet
-rm -rf $TESTNET_CONFIG
-mkdir -p $TESTNET_CONFIG
-cp -ra /shared/template/* $TESTNET_CONFIG
-sed -i -e 's/XXX/'$SHANGHAI'/' $TESTNET_CONFIG/genesis.json
+TESTNET_DIRECTORY=/shared/testnet
+setup_testnet_directory $TESTNET_DIRECTORY
 
-GENESIS_FILE=$TESTNET_CONFIG/eth2_genesis_time.dat
-echo $ETH2_GENESIS > $GENESIS_FILE
+CONFIG_YAML=$TESTNET_DIRECTORY/config.yml
+MIN_GENESIS_TIME=$(($(date +%s) + 30))
+set_config_param $CONFIG_YAML MIN_GENESIS_TIME $MIN_GENESIS_TIME
 
-echo "MIN_GENESIS_TIME: $ETH2_GENESIS" >> $TESTNET_CONFIG/config.yml
+CAPELLA_FORK_EPOCH=$(get_config_param $CONFIG_YAML CAPELLA_FORK_EPOCH)
+SECONDS_PER_SLOT=$(get_config_param $CONFIG_YAML SECONDS_PER_SLOT)
+SLOTS_PER_EPOCH=$(get_config_param $CONFIG_YAML SLOTS_PER_EPOCH)
+SHANGHAI_TIME=$(($MIN_GENESIS_TIME + $CAPELLA_FORK_EPOCH * $SECONDS_PER_SLOT * $SLOTS_PER_EPOCH))
+# edit one param in genesis.json
+sed -i -e "s/SHANGHAI_TIME/${SHANGHAI_TIME}/" $TESTNET_DIRECTORY/genesis.json
+
+FINISHED_FILE=$TESTNET_DIRECTORY/finished.dat
+touch $FINISHED_FILE
 
 prysmctl \
     testnet \
     generate-genesis \
     --num-validators=512 \
-    --output-ssz=$TESTNET_CONFIG/genesis.ssz \
-    --chain-config-file=$TESTNET_CONFIG/config.yml \
-    --genesis-time=$GENESIS
+    --output-ssz=$TESTNET_DIRECTORY/genesis.ssz \
+    --chain-config-file=$TESTNET_DIRECTORY/config.yml \
+    --genesis-time=$MIN_GENESIS_TIME
 
-echo "EIP4844_FORK_EPOCH: 9999999999999" >> $TESTNET_CONFIG/config.yml
 
