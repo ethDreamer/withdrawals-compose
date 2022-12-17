@@ -1,7 +1,7 @@
 version: '2'
 services:
   beacon:
-    image: ethdreamer/lighthouse:withdrawals
+    image: ethdreamer/lighthouse:capella
     expose:
       - 5052
     volumes:
@@ -9,7 +9,7 @@ services:
     entrypoint:
       "/shared/scripts/beacon.sh"
   execution:
-    image: bbusa/geth-withdrawals
+    image: ethpandaops/geth:withdrawals-timestamp
     expose:
       - 8545
       - 8551
@@ -18,7 +18,7 @@ services:
     entrypoint:
       "/shared/scripts/execution.sh"
   validator:
-    image: ethdreamer/lighthouse:withdrawals
+    image: ethdreamer/lighthouse:capella
     expose:
       - 5052
     volumes:
