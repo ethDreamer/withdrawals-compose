@@ -1,7 +1,7 @@
 version: '2'
 services:
   beacon:
-    image: ethdreamer/lighthouse:capella
+    image: ethdreamer/lighthouse:capella_api_update
     expose:
       - 5052
     volumes:
@@ -18,7 +18,7 @@ services:
     entrypoint:
       "/shared/scripts/execution.sh"
   validator:
-    image: ethdreamer/lighthouse:capella
+    image: ethdreamer/lighthouse:capella_api_update
     expose:
       - 5052
     volumes:

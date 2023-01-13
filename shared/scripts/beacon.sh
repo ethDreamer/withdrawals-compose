@@ -21,10 +21,12 @@ rm -rf $DATADIR && \
 
 
 lighthouse \
+    --debug-level debug \
     --spec mainnet \
     --datadir=$DATADIR \
     --testnet-dir=$DATADIR/testnet \
     beacon \
+    --disable-discovery \
     --http-allow-sync-stalled \
     --disable-enr-auto-update \
     --dummy-eth1 \
