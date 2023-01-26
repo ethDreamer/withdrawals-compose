@@ -21,7 +21,6 @@ rm -rf $DATADIR && \
 
 
 lighthouse \
-    --spec mainnet \
     --datadir=$DATADIR \
     --testnet-dir=$DATADIR/testnet \
     beacon \

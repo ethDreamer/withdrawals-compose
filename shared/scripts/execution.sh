@@ -2,6 +2,7 @@
 
 TESTNET_CONFIG=/shared/testnet
 DATADIR=/datadir
+ETHERBASE="0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"
 
 while [ ! -e $TESTNET_CONFIG/genesis.ssz ]; do
     sleep 1
@@ -18,25 +19,29 @@ geth \
     init \
     $TESTNET_CONFIG/genesis.json \
 
-echo -e "\n" | geth \
+geth \
     --datadir $DATADIR \
+    --password <(echo password) \
+    --lightkdf \
     account \
     import \
     /shared/sk.json
 
-echo -e "\n\n" | geth \
+geth \
     --datadir=$DATADIR \
     --http \
-	--http.addr 0.0.0.0 \
-	--http.vhosts='*' \
+        --http.addr 0.0.0.0 \
+        --http.vhosts='*' \
     --networkid 32382 \
     --nodiscover \
     --syncmode=full \
+    --password <(echo password) \
     --allow-insecure-unlock \
-    --unlock "0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b" \
+    --miner.etherbase $ETHERBASE \
+    --unlock $ETHERBASE \
     --mine \
-	--authrpc.addr 0.0.0.0 \
-	--authrpc.vhosts='*' \
+        --authrpc.addr 0.0.0.0 \
+        --authrpc.vhosts='*' \
     --authrpc.jwtsecret=/shared/jwt.secret
 
 

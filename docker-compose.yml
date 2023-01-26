@@ -9,7 +9,7 @@ services:
     entrypoint:
       "/shared/scripts/beacon.sh"
   execution:
-    image: ethpandaops/geth:withdrawals-timestamp
+    image: ethereum/client-go
     expose:
       - 8545
       - 8551
